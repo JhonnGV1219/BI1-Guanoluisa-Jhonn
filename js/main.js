@@ -1,4 +1,5 @@
 import { quizQuestions } from "./data.js";
+import { initThemeToggle } from "./theme.js";
 
 const questionLabel = document.querySelector("#questionLabel");
 const scoreLabel = document.querySelector("#scoreLabel");
@@ -106,3 +107,4 @@ nextButton.addEventListener("click", () => {
 });
 
 renderQuestion();
+initThemeToggle();

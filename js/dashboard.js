@@ -1,4 +1,5 @@
 import { leagueData } from "./data.js";
+import { initThemeToggle } from "./theme.js";
 
 const chartColors = {
   text: "#a5b0a7",
@@ -142,7 +143,120 @@ function renderMomentumLegend() {
   });
 }
 
+function updateChartTheme(theme) {
+  const isLight = theme === "light";
+  const textColor = isLight ? "#58685d" : "#a5b0a7";
+  const gridColor = isLight ? "rgba(68, 89, 73, 0.14)" : "rgba(160, 174, 163, 0.12)";
+  Chart.defaults.color = textColor;
+  Chart.defaults.plugins.tooltip.backgroundColor = isLight ? "#ffffff" : chartColors.tooltip;
+  Chart.defaults.plugins.tooltip.titleColor = isLight ? "#1b2820" : "#f2f5ef";
+  Chart.defaults.plugins.tooltip.bodyColor = isLight ? "#526157" : "#c0cbc2";
+  Chart.defaults.plugins.tooltip.borderColor = isLight ? "#cbd7cd" : "#465248";
+
+  [standingsChart, momentumChart].forEach(chart => {
+    Object.values(chart.options.scales).forEach(scale => {
+      scale.ticks.color = textColor;
+      if (scale.grid.display !== false) scale.grid.color = gridColor;
+    });
+    chart.update("none");
+  });
+
+  standingsChart.options.scales.y.ticks.color = isLight ? "#26352b" : "#d0d8d1";
+  standingsChart.update("none");
+  resultsChart.data.datasets[0].borderColor = isLight ? "#ffffff" : "#191f1b";
+  resultsChart.update("none");
+}
+
+let reportStatusTimer;
+
+function showReportStatus(message) {
+  const status = document.querySelector("#reportStatus");
+  status.textContent = message;
+  status.classList.add("is-visible");
+  window.clearTimeout(reportStatusTimer);
+  reportStatusTimer = window.setTimeout(() => status.classList.remove("is-visible"), 3500);
+}
+
+function downloadReport() {
+  const JsPDF = window.jspdf?.jsPDF;
+  if (!JsPDF) {
+    showReportStatus("No se pudo cargar el generador PDF. Revisa tu conexión e inténtalo otra vez.");
+    return;
+  }
+
+  const currentTheme = document.documentElement.dataset.theme;
+  updateChartTheme("light");
+
+  try {
+    const pdf = new JsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const reportDate = new Intl.DateTimeFormat("es-ES", { dateStyle: "long" }).format(new Date());
+    const labels = standingsChart.data.labels;
+    const points = standingsChart.data.datasets[0].data;
+
+    pdf.setFillColor(246, 248, 246);
+    pdf.rect(0, 0, pageWidth, 210, "F");
+    pdf.setTextColor(29, 43, 33);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text("Informe de La Liga 2025/26", 14, 16);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(90, 105, 94);
+    pdf.text(`Jornada ${leagueData.matchday} · Datos simulados · ${reportDate}`, 14, 23);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(35, 51, 39);
+    pdf.text(`Partidos: ${leagueData.matchesPlayed}`, 14, 34);
+    pdf.text(`Líder: ${leader.name} (${leader.points} pts)`, 75, 34);
+    pdf.text(`Goleador: ${leadingScorer.name} (${leadingScorer.goals})`, 156, 34);
+    pdf.text(`Goles / partido: ${averageGoals}`, 245, 34);
+
+    pdf.setFontSize(10);
+    pdf.text(`Clasificación · ${teamFilter.value === "top4" ? "Top 4" : "Tabla general"}`, 14, 46);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    labels.forEach((name, index) => {
+      pdf.text(`${index + 1}. ${name}`, 14, 53 + index * 4.5);
+      pdf.text(`${points[index]} pts`, 75, 53 + index * 4.5);
+    });
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.text("Balance de resultados", 120, 46);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    leagueData.results.forEach((result, index) => {
+      pdf.text(`${result.label}: ${result.value}%`, 120, 53 + index * 5);
+    });
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.text("Puntos por equipo", 14, 81);
+    pdf.addImage(standingsChart.toBase64Image(), "PNG", 12, 84, 132, 49);
+    pdf.text("Resultados", 158, 81);
+    pdf.addImage(resultsChart.toBase64Image(), "PNG", 157, 84, 48, 48);
+
+    pdf.setFontSize(10);
+    pdf.text("Evolución de los líderes · últimas 5 fechas", 14, 143);
+    pdf.addImage(momentumChart.toBase64Image(), "PNG", 12, 146, pageWidth - 24, 49);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 115, 104);
+    pdf.text("Reporte generado desde el dashboard. Información con fines demostrativos.", 14, 203);
+    pdf.save("informe-la-liga-2025-26.pdf");
+    showReportStatus("Reporte PDF descargado.");
+  } catch (error) {
+    console.error("No se pudo generar el reporte PDF:", error);
+    showReportStatus("Ocurrió un error al generar el PDF. Vuelve a intentarlo.");
+  } finally {
+    updateChartTheme(currentTheme);
+  }
+}
+
 teamFilter.addEventListener("change", renderStandings);
+document.querySelector("#downloadReport").addEventListener("click", downloadReport);
 renderStandings();
 renderResultsLegend();
 renderMomentumLegend();
+initThemeToggle(updateChartTheme);

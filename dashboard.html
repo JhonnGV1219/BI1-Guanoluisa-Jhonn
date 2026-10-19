@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Dashboard simulado de La Liga Española 2025/2026 con posiciones, resultados y evolución de puntos.">
   <meta name="theme-color" content="#101411">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem("site-theme") || "dark"; } catch { document.documentElement.dataset.theme = "dark"; }</script>
   <title>La Liga 2025/26 | Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +24,7 @@
   <main class="container-fluid dashboard-content" id="dashboardMain">
     <header class="dashboard-header">
       <div><p class="dash-eyebrow"><span class="live-dot"></span> CENTRO DE ANÁLISIS <span class="eyebrow-divider">/</span> JORNADA 10</p><h1>La Liga <span>2025/26</span></h1><p class="header-subtitle">El pulso de la competición, en una sola mirada.</p></div>
-      <div class="header-controls"><label class="filter-label" for="teamFilter">MOSTRAR</label><select class="form-select filter-select" id="teamFilter" aria-label="Filtrar equipos de la tabla de posiciones"><option value="all">Tabla general</option><option value="top4">Solo Top 4</option></select><span class="updated-label">DATOS SIMULADOS <span>·</span> 19 OCT 2025</span></div>
+      <div class="header-controls"><label class="filter-label" for="teamFilter">MOSTRAR</label><select class="form-select filter-select" id="teamFilter" aria-label="Filtrar equipos de la tabla de posiciones"><option value="all">Tabla general</option><option value="top4">Solo Top 4</option></select><span class="updated-label">DATOS SIMULADOS <span>·</span> 19 OCT 2025</span><div class="header-actions"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar a tema claro" aria-pressed="true" title="Cambiar tema"><svg class="theme-icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.1 15.4A8.2 8.2 0 0 1 8.6 3.9 8.6 8.6 0 1 0 20.1 15.4Z"/></svg><svg class="theme-icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button><button class="download-button" id="downloadReport" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg><span>Descargar PDF</span></button></div></div>
     </header>
 
     <section class="kpi-grid" aria-label="Indicadores clave">
@@ -40,7 +41,9 @@
     </section>
     <footer class="dashboard-footer"><span>DATOS SIMULADOS CON FINES DEMOSTRATIVOS</span><span>LA LIGA EA SPORTS <span class="footer-slash">/</span> 2025—2026</span></footer>
   </main>
+  <div class="report-status" id="reportStatus" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>
